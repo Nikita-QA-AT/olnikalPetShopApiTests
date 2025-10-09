@@ -1,5 +1,7 @@
 import allure
 import requests
+import jsonschema
+from .schemas.pet_schema import PET_SCHEMA
 
 BASE_URL = "http://5.181.109.28:9090/api/v3"
 
@@ -13,26 +15,27 @@ class TestPet:
             response = requests.delete(url=f"{BASE_URL}/pet/9999")
 
         with allure.step("Проверка статуса ответа"):
-            assert response.status_code == 200, f"Ожидаю код ответа 200, а получили {response.status_code}"
+            assert response.status_code == 200, f"Ожидаю код 200, а получил {response.status_code}"
 
         with allure.step("Проверка текстового содержимого ответа"):
-            assert "Pet deleted" in response.text, f"Ожидаю, что текст Pet deleted есть в response, но его нет. response выглядит так {response.text}"
+            assert "Pet deleted" in response.text, f" Ожидался текст 'Pet deleted', но получен '{response.text}'"
 
     @allure.title("Попытка обновить несуществующего питомца")
     def test_update_nonexistent_pet(self):
-        with allure.step("Отправка запроса на обновление несуществующего питомца"):
+        with allure.step("Подготовка данных для обновления питомца"):
             payload = {
                 "id": 9999,
                 "name": "Non-existent Pet",
                 "status": "available"
             }
+        with allure.step("Отправка запроса на обновление несуществующего питомца"):
             response = requests.put(url=f"{BASE_URL}/pet", json=payload)
 
         with allure.step("Проверка статуса ответа"):
-            assert response.status_code == 404, f"Ожидаю код ответа 404, а получили {response.status_code}"
+            assert response.status_code == 404, f"Ожидаю код 404, а получил {response.status_code}"
 
         with allure.step("Проверка текстового содержимого ответа"):
-            assert "Pet not found" in response.text, f"Ожидаю, что текст Pet not found есть в response, но его нет. response выглядит так {response.text}"
+            assert "Pet not found" in response.text, f" Ожидался текст 'Pet not found', но получен '{response.text}'"
 
     @allure.title("Попытка получить информацию о несуществующем питомце")
     def test_get_nonexistent_pet(self):
@@ -40,7 +43,31 @@ class TestPet:
             response = requests.get(url=f"{BASE_URL}/pet/9999")
 
         with allure.step("Проверка статуса ответа"):
-            assert response.status_code == 404, f"Ожидаю код ответа 404, а получили {response.status_code}"
+            assert response.status_code == 404, f"Ожидаю код 404, а получил {response.status_code}"
 
         with allure.step("Проверка текстового содержимого ответа"):
-            assert "Pet not found" in response.text, f"Ожидаю, что текст Pet not found есть в response, но его нет. response выглядит так {response.text}"
+            assert "Pet not found" in response.text, f" Ожидался текст 'Pet not found', но получен '{response.text}'"
+
+    @allure.title("Добавление нового питомца")
+    def test_add_pet(self):
+        with allure.step("Подготовка данных для создания питомца"):
+            payload = {
+                "id": 1,
+                "name": "Buddy",
+                "status": "available"
+            }
+        with allure.step("Отправка запроса на создание  питомца"):
+            response = requests.post(url=f"{BASE_URL}/pet", json=payload)
+            response_json = response.json()
+
+        with allure.step("Проверка статуса ответа и валидация JSON-схемы"):
+            assert response.status_code == 200, f"Ожидаю код 200, а получил {response.status_code}"
+            jsonschema.validate(response_json, PET_SCHEMA)
+
+
+        with allure.step("Проверка параметров питомца в ответе"):
+            assert response_json['id'] == payload['id'], f"id питомца не совпадает с ожидаемым"
+            assert response_json['name'] == payload['name'], f"имя питомца не совпадает с ожидаемым"
+            assert response_json['status'] == payload['status'], f"статус питомца не совпадает с ожидаемым"
+
+
