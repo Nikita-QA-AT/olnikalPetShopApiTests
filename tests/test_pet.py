@@ -86,8 +86,8 @@ class TestPet:
                     "name": "Dogs"},
                 "photoUrls": ["string"],
                 "tags": [{
-                             "id": 0,
-                             "name": "string"}],
+                    "id": 0,
+                    "name": "string"}],
                 "status": "available"
             }
         with allure.step("Отправка запроса на создание  питомца"):
@@ -108,3 +108,12 @@ class TestPet:
             assert response_json['tags'] == payload['tags'], "tags не совпадает"
 
 
+    @allure.title("Получение информации о питомце по ID после его создания")
+    def test_get_pet_by_id(self, create_pet):
+        with allure.step("Получение ID созданного питомца"):
+            pet_id = create_pet["id"]
+
+        with allure.step("Отправка запроса на получение информации о питомце по ID"):
+            response = requests.get(url=f"{BASE_URL}/pet/{pet_id}")
+            assert response.status_code == 200
+            assert response.json()["id"] == pet_id
