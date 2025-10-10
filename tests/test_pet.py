@@ -117,3 +117,24 @@ class TestPet:
             response = requests.get(url=f"{BASE_URL}/pet/{pet_id}")
             assert response.status_code == 200
             assert response.json()["id"] == pet_id
+
+
+    @allure.title("Обновление информации о питомце по ID после его создания")
+    def test_update_pet_by_id(self, create_pet):
+        with allure.step("Получение ID созданного питомца"):
+            pet_id = create_pet["id"]
+
+        with allure.step("Подготовка данных для обновления питомца"):
+            payload = {
+                "id": pet_id,
+                "name": "Buddy Updated",
+                "status": "sold"
+            }
+
+        with allure.step("Отправка запроса на обновление питомца по ID"):
+            response = requests.put(url=f"{BASE_URL}/pet", json=payload)
+            response_json = response.json()
+            assert response.status_code == 200, f"Ожидался статус 200, но получен {response.status_code}"
+            assert response_json["id"] == payload["id"], "ID питомца не совпадает с ожидаемым"
+            assert response_json["name"] == payload["name"], "Имя питомца не совпадает с ожидаемым"
+            assert response_json["status"] == payload["status"], "Статус питомца не совпадает с ожидаемым"
