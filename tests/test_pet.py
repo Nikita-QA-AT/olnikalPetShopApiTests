@@ -138,3 +138,18 @@ class TestPet:
             assert response_json["id"] == payload["id"], "ID питомца не совпадает с ожидаемым"
             assert response_json["name"] == payload["name"], "Имя питомца не совпадает с ожидаемым"
             assert response_json["status"] == payload["status"], "Статус питомца не совпадает с ожидаемым"
+
+
+    @allure.title("Удаление питомца по ID после его создания")
+    def test_delete_pet_by_id(self, create_pet):
+        with allure.step("Получение ID созданного питомца"):
+            pet_id = create_pet["id"]
+
+        with allure.step("Отправка запроса на удаление питомца по ID"):
+            response = requests.delete(url=f"{BASE_URL}/pet/{pet_id}")
+            assert response.status_code == 200, f"Ожидался статус 200, но получен {response.status_code}"
+
+        with allure.step("Отправка запроса на получение информации о питомце по ID"):
+            response = requests.get(url=f"{BASE_URL}/pet/{pet_id}")
+            assert response.status_code == 404, f"Ожидался статус 404, но получен {response.status_code}"
+            assert "Pet not found" in response.text, f" Ожидался текст 'Pet not found', но получен '{response.text}'"
