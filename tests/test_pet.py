@@ -1,4 +1,5 @@
 import allure
+import pytest
 import requests
 import jsonschema
 from unicodedata import category
@@ -153,3 +154,24 @@ class TestPet:
             response = requests.get(url=f"{BASE_URL}/pet/{pet_id}")
             assert response.status_code == 404, f"Ожидался статус 404, но получен {response.status_code}"
             assert "Pet not found" in response.text, f" Ожидался текст 'Pet not found', но получен '{response.text}'"
+
+
+    @allure.title("Получение списка питомцев по статусу")
+    @pytest.mark.parametrize(
+        "status, expected_status_code,expected_type",
+        [
+            ("available", 200, list),
+            ("pending", 200, list),
+            ("sold", 200, list),
+            ("cancel", 400, dict),
+            ("", 400, dict)
+        ]
+    )
+    def test_get_pets_by_status(self, status, expected_status_code, expected_type):
+        with allure.step(f"Отправка запроса на получение питомцев по статусу {status}"):
+            response = requests.get(url=f"{BASE_URL}/pet/findByStatus", params={"status": status})
+
+        with allure.step("Проверка статуса ответа и формата данных"):
+            assert response.status_code == expected_status_code, f"Ожидаю {expected_status_code}, а получил {response.status_code}"
+            assert isinstance(response.json(), expected_type)
+
