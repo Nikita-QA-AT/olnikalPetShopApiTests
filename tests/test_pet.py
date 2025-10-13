@@ -2,7 +2,6 @@ import allure
 import pytest
 import requests
 import jsonschema
-from unicodedata import category
 
 from .schemas.pet_schema import PET_SCHEMA
 
@@ -169,9 +168,10 @@ class TestPet:
     )
     def test_get_pets_by_status(self, status, expected_status_code, expected_type):
         with allure.step(f"Отправка запроса на получение питомцев по статусу {status}"):
-            response = requests.get(url=f"{BASE_URL}/pet/findByStatus", params={"status": status})
+            response = requests.get(url=f"{BASE_URL}/pet/findByStatus", params={
+                "status": status
+            })
 
         with allure.step("Проверка статуса ответа и формата данных"):
             assert response.status_code == expected_status_code, f"Ожидаю {expected_status_code}, а получил {response.status_code}"
             assert isinstance(response.json(), expected_type)
-
