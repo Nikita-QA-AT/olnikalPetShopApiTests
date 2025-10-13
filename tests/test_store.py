@@ -64,3 +64,15 @@ class TestStore:
             response = requests.get(url=f"{BASE_URL}/store/order/1")
             assert response.status_code == 404, f"Ожидался статус 404, но получен {response.status_code}"
             assert "Order not found" in response.text, f" Ожидался текст 'Order not found', но получен '{response.text}'"
+
+
+    @allure.title("Попытка получить информацию о несуществующем заказе")
+    def test_get_nonexistent_order(self):
+        with allure.step("Отправка запроса на получение несуществующего заказа"):
+            response = requests.get(url=f"{BASE_URL}/store/order/9999")
+
+        with allure.step("Проверка статуса ответа"):
+            assert response.status_code == 404, f"Ожидаю код 404, а получил {response.status_code}"
+
+        with allure.step("Проверка текстового содержимого ответа"):
+            assert "Order not found" in response.text, f" Ожидался текст 'Order not found', но получен '{response.text}'"
