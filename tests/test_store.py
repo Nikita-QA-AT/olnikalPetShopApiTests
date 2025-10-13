@@ -76,3 +76,14 @@ class TestStore:
 
         with allure.step("Проверка текстового содержимого ответа"):
             assert "Order not found" in response.text, f" Ожидался текст 'Order not found', но получен '{response.text}'"
+
+
+    @allure.title("Получение инвентаря магазина (GET /store/inventory)")
+    def test_get_inventory(self):
+        with allure.step("Отправка запроса на получение инвентаря магазина"):
+            response = requests.get(url=f"{BASE_URL}/store/inventory")
+            assert response.status_code == 200
+            assert isinstance(response.json(), dict)
+
+
+
