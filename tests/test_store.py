@@ -52,3 +52,15 @@ class TestStore:
             assert response_json['quantity'] == create_order['quantity'], f"quantity заказа не совпадает с ожидаемым"
             assert response_json['status'] == create_order['status'], f"status заказа не совпадает с ожидаемым"
             assert response_json['complete'] == create_order['complete'], f"complete заказа не совпадает с ожидаемым"
+
+
+    @allure.title("Удаление заказа по ID (DELETE /store/order/{orderId})")
+    def test_delete_order_by_id(self, create_order):
+        with allure.step("Отправка запроса на удаление заказа по ID"):
+            response = requests.delete(url=f"{BASE_URL}/store/order/1")
+            assert response.status_code == 200, f"Ожидался статус 200, но получен {response.status_code}"
+
+        with allure.step("Отправка запроса на получение информации о заказе по ID"):
+            response = requests.get(url=f"{BASE_URL}/store/order/1")
+            assert response.status_code == 404, f"Ожидался статус 404, но получен {response.status_code}"
+            assert "Order not found" in response.text, f" Ожидался текст 'Order not found', но получен '{response.text}'"
