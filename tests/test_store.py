@@ -3,7 +3,8 @@ import pytest
 import requests
 import jsonschema
 
-from tests.conftest import create_pet
+from .schemas.inventory_schema import INVENTORY_SCHEMA
+from .schemas.order_schema import ORDER_SCHEMA
 
 BASE_URL = "http://5.181.109.28:9090/api/v3"
 
@@ -26,6 +27,11 @@ class TestStore:
             response = requests.post(url=f"{BASE_URL}/store/order", json=payload)
             response_json = response.json()
 
+        with allure.step("Проверка формата ответа по схеме ORDER_SCHEMA"):
+            jsonschema.validate(response_json, ORDER_SCHEMA)
+
+
+
         with allure.step("Проверка статуса ответа"):
             assert response.status_code == 200, f"Ожидаю код 200, а получил {response.status_code}"
 
@@ -39,8 +45,11 @@ class TestStore:
 
     @allure.title("Получение информации о заказе по ID (GET /store/order/{orderId})")
     def test_get_order_by_id(self, create_order):
+        with allure.step("Получение ID созданного заказа"):
+            order_id = create_order["id"]
+
         with allure.step("Отправка запроса на получение информации о заказе по ID"):
-            response = requests.get(url=f"{BASE_URL}/store/order/1")
+            response = requests.get(url=f"{BASE_URL}/store/order/{order_id}")
             response_json = response.json()
 
         with allure.step("Проверка статуса ответа"):
@@ -56,12 +65,15 @@ class TestStore:
 
     @allure.title("Удаление заказа по ID (DELETE /store/order/{orderId})")
     def test_delete_order_by_id(self, create_order):
+        with allure.step("Получение ID созданного заказа"):
+            order_id = create_order["id"]
+
         with allure.step("Отправка запроса на удаление заказа по ID"):
-            response = requests.delete(url=f"{BASE_URL}/store/order/1")
+            response = requests.delete(url=f"{BASE_URL}/store/order/{order_id}")
             assert response.status_code == 200, f"Ожидался статус 200, но получен {response.status_code}"
 
         with allure.step("Отправка запроса на получение информации о заказе по ID"):
-            response = requests.get(url=f"{BASE_URL}/store/order/1")
+            response = requests.get(url=f"{BASE_URL}/store/order/{order_id}")
             assert response.status_code == 404, f"Ожидался статус 404, но получен {response.status_code}"
             assert "Order not found" in response.text, f" Ожидался текст 'Order not found', но получен '{response.text}'"
 
@@ -82,8 +94,9 @@ class TestStore:
     def test_get_inventory(self):
         with allure.step("Отправка запроса на получение инвентаря магазина"):
             response = requests.get(url=f"{BASE_URL}/store/inventory")
+
+        with allure.step("Проверка статуса ответа"):
             assert response.status_code == 200
-            assert isinstance(response.json(), dict)
 
-
-
+        with allure.step("Проверка формата ответа по схеме INVENTORY_SCHEMA"):
+            jsonschema.validate(response.json(), INVENTORY_SCHEMA)
